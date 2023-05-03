@@ -1,15 +1,42 @@
 version: '3.4'
 
 services:
-  #portainer:
-  #  container_name: portainer
-  #  restart: always
-  #  ports:
-  #    - "9000:9000" 
-  #    - "8080:8000" 
-  #  volumes:
-  #    - /var/run/docker.sock:/var/run/docker.sock
-  #    - portainer_data:/data
+  portainer:
+   container_name: portainer #pwd:/var/run/docker.sock
+   restart: always
+   ports:
+     - "9000:9000" 
+     - "8080:8000" 
+   volumes:
+     - /var/run/docker.sock:/var/run/docker.sock
+     - portainer_data:/data
+
+  discountdb:
+    container_name: discountdb
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=admin
+      - POSTGRES_DB=DiscountDb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    container_name: pgadmin
+    restart: always
+    ports:
+      - "5100:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=user@domain.com
+      - PGADMIN_DEFAULT_PASSWORD=SuperSecret
+    depends_on:
+      - discountdb
+    volumes:
+      - pgadmin_data:/root/.pgadmin
+
+
   catalogdb:
     container_name: catalogdb
     restart: always
@@ -46,4 +73,15 @@ services:
       - "8001:80"
     depends_on:
       - basketdb
+
+
+  discount.api:
+    container_name: discount.api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - DATABASESETTINGS__CONNECTIONSTRING=Server=discountdb;Port=5432;Database=DiscountDb;User Id=admin;Password=postgres;
+    ports:
+      - "8002:80"
+    depends_on:
+      - discountdb
 
